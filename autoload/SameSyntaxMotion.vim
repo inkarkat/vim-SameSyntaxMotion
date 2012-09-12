@@ -107,14 +107,23 @@ function! s:SearchLastOfSynID( synID, hlgroupId, flags )
     call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
     return l:goodPosition
 endfunction
-function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
+function! s:BacktrackToHlgroupId( position, hlgroupId, flags )
+    let l:position = a:position
+    while ! s:IsHlgroupIdHere(l:position[0], l:position[1], a:hlgroupId)
+	echomsg '**** backtrack from' string(l:position)
+	let l:position = searchpos('.', a:flags.'W')
+    endwhile
+    return l:position
+endfunction
+function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
+    let [l:flags, l:backtrackFlags] = (a:isBackward ? ['b', ''] : ['', 'b'])
     let l:save_view = winsaveview()
     let [l:prevLine, l:prevCol] = [line('.'), col('.')]
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     let l:currentHlgroupId = s:GetHlgroupId(l:currentSyntaxId)
-
+echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
     for l:i in range(1, a:count)
-	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, a:flags])
+	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, l:flags])
 	if l:matchPosition == [0, 0]
 	    if l:i > 1
 		" (Due to the count,) we've already moved to an intermediate
@@ -131,6 +140,7 @@ function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
 	    return l:matchPosition
 	endif
 
+	let l:matchPosition = s:BacktrackToHlgroupId(l:matchPosition, l:currentHlgroupId, l:backtrackFlags)
 	let [l:prevLine, l:prevCol] = l:matchPosition
     endfor
 
@@ -140,16 +150,16 @@ function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
     normal! zv
 endfunction
 function! SameSyntaxMotion#BeginForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), '')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 0)
 endfunction
 function! SameSyntaxMotion#BeginBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 'b')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 1)
 endfunction
 function! SameSyntaxMotion#EndForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), '')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 0)
 endfunction
 function! SameSyntaxMotion#EndBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 'b')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 1)
 endfunction
 
 let &cpo = s:save_cpo
