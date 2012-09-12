@@ -89,10 +89,13 @@ function! s:SearchLastOfSynID( synID, hlgroupId, flags )
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    break
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID) ||
-	\   s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
-	    " We're still inside the syntax area.
+	elseif s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
+	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
+	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
+	    " We're still inside the syntax area.
+	    " Tentatively progress; we may again find the desired color in this
+	    " syntax area.
 	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:matchPosition[1])
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
@@ -107,22 +110,13 @@ function! s:SearchLastOfSynID( synID, hlgroupId, flags )
     call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
     return l:goodPosition
 endfunction
-function! s:BacktrackToHlgroupId( position, hlgroupId, flags )
-    let l:position = a:position
-    while ! s:IsHlgroupIdHere(l:position[0], l:position[1], a:hlgroupId)
-	echomsg '**** backtrack from' string(l:position)
-	let l:position = searchpos('.', a:flags.'W')
-    endwhile
-    return l:position
-endfunction
-function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
-    let [l:flags, l:backtrackFlags] = (a:isBackward ? ['b', ''] : ['', 'b'])
+function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
     let l:save_view = winsaveview()
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     let l:currentHlgroupId = s:GetHlgroupId(l:currentSyntaxId)
 echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
     for l:i in range(1, a:count)
-	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, l:flags])
+	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, a:flags])
 	if l:matchPosition == [0, 0]
 	    if l:i > 1
 		" (Due to the count,) we've already moved to an intermediate
@@ -146,16 +140,16 @@ echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')
     normal! zv
 endfunction
 function! SameSyntaxMotion#BeginForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 0)
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), '')
 endfunction
 function! SameSyntaxMotion#BeginBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 1)
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 'b')
 endfunction
 function! SameSyntaxMotion#EndForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 0)
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), '')
 endfunction
 function! SameSyntaxMotion#EndBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 1)
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 'b')
 endfunction
 
 let &cpo = s:save_cpo
