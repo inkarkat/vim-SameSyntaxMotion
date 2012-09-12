@@ -118,7 +118,6 @@ endfunction
 function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
     let [l:flags, l:backtrackFlags] = (a:isBackward ? ['b', ''] : ['', 'b'])
     let l:save_view = winsaveview()
-    let [l:prevLine, l:prevCol] = [line('.'), col('.')]
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     let l:currentHlgroupId = s:GetHlgroupId(l:currentSyntaxId)
 echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
@@ -139,9 +138,6 @@ echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')
 
 	    return l:matchPosition
 	endif
-
-	let l:matchPosition = s:BacktrackToHlgroupId(l:matchPosition, l:currentHlgroupId, l:backtrackFlags)
-	let [l:prevLine, l:prevCol] = l:matchPosition
     endfor
 
     " Open the fold at the final search result. This makes the search work like
