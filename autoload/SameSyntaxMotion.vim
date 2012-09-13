@@ -8,6 +8,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	003	14-Sep-2012	Implement text object. Factor out s:Jump() to
+"				allow passing in the original syntaxId and
+"				hlgroupId; it may be different at the text
+"				object begin and therefore may adulterate the
+"				end match.
 "	002	13-Sep-2012	Implement the full set of the four begin/end
 "				forward/backward mappings.
 "				Implement skipping over unhighlighted
@@ -25,6 +30,10 @@ set cpo&vim
 
 function! s:GetHlgroupId( synID )
     return synIDtrans(a:synID)
+endfunction
+function! s:GetCurrentSyntaxAndHlgroupIds()
+    let l:currentSyntaxId = synID(line('.'), col('.'), 1)
+    return [l:currentSyntaxId, s:GetHlgroupId(l:currentSyntaxId)]
 endfunction
 function! s:IsSynIDHere( line, col, synID )
     return (index(synstack(a:line, a:col), a:synID) != -1)
@@ -120,13 +129,11 @@ function! s:SearchLastOfSynID( synID, hlgroupId, flags )
     call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
     return l:goodPosition
 endfunction
-function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
+function! s:Jump( count, SearchFunction, flags, currentSyntaxId, currentHlgroupId )
     let l:save_view = winsaveview()
-    let l:currentSyntaxId = synID(line('.'), col('.'), 1)
-    let l:currentHlgroupId = s:GetHlgroupId(l:currentSyntaxId)
-"****D echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
+"****D echomsg '****' a:currentSyntaxId.':' string(synIDattr(a:currentSyntaxId, 'name')) 'colored in' synIDattr(a:currentHlgroupId, 'name')
     for l:i in range(1, a:count)
-	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, a:flags])
+	let l:matchPosition = call(a:SearchFunction, [a:currentSyntaxId, a:currentHlgroupId, a:flags])
 	if l:matchPosition == [0, 0]
 	    if l:i > 1
 		" (Due to the count,) we've already moved to an intermediate
@@ -148,7 +155,14 @@ function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
     " the built-in motions, and avoids that some visual selections get stuck at
     " a match inside a closed fold.
     normal! zv
+
+    return l:matchPosition
 endfunction
+function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
+    let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+    return  s:Jump(a:count, a:SearchFunction, a:flags, l:currentSyntaxId, l:currentHlgroupId)
+endfunction
+
 function! SameSyntaxMotion#BeginForward( mode )
     call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), '')
 endfunction
@@ -160,6 +174,15 @@ function! SameSyntaxMotion#EndForward( mode )
 endfunction
 function! SameSyntaxMotion#EndBackward( mode )
     call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 'b')
+endfunction
+
+function! SameSyntaxMotion#TextObjectBegin( count, isInner )
+    let [g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+
+    return s:Jump(a:count, function('s:SearchLastOfSynID'), 'b', g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
+endfunction
+function! SameSyntaxMotion#TextObjectEnd( count, isInner )
+    return s:Jump(a:count, function('s:SearchLastOfSynID'), '' , g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
 endfunction
 
 let &cpo = s:save_cpo
