@@ -13,6 +13,12 @@
 "				Implement skipping over unhighlighted
 "				whitespace when its surrounded by the same
 "				syntax area on both sides.
+"				Handle situations where due to :syntax hs=s+1 or
+"				contained groups (like vimCommentTitle contained
+"				in vimLineComment) the same highlighting may
+"				start only later in the syntax area, while still
+"				skipping over contained "subsyntaxes" (like that
+"				quote here) inside the syntax area.
 "	001	12-Sep-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
@@ -63,12 +69,16 @@ function! s:SearchFirstOfSynID( synID, hlgroupId, flags )
 	    " We've arrived at the buffer's border.
 	    call setpos('.', [0] + l:originalPosition + [0])
 	    return l:matchPosition
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID) ||
-	\   s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
+	elseif s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
+	    " We're still / again inside the same-colored syntax area.
 	    if l:hasLeft
-		" We've found the next syntax area.
+		" We've found a place in the next syntax area with the same
+		" color.
 		return l:matchPosition
 	    endif
+	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
+	    " We're still / again inside the syntax area.
+	    " Progress until we also find the desired color in this syntax area.
 	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:matchPosition[1])
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
@@ -114,7 +124,7 @@ function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
     let l:save_view = winsaveview()
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     let l:currentHlgroupId = s:GetHlgroupId(l:currentSyntaxId)
-echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
+"****D echomsg '****' l:currentSyntaxId.':' string(synIDattr(l:currentSyntaxId, 'name')) 'colored in' synIDattr(l:currentHlgroupId, 'name')
     for l:i in range(1, a:count)
 	let l:matchPosition = call(a:SearchFunction, [l:currentSyntaxId, l:currentHlgroupId, a:flags])
 	if l:matchPosition == [0, 0]
