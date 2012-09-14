@@ -179,6 +179,12 @@ endfunction
 function! SameSyntaxMotion#TextObjectBegin( count, isInner )
     let [g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
 
+    " Move one character to the right, so that we do not jump to the previous
+    " syntax area when we're at the start of a syntax area. CountJump will
+    " restore the original cursor position should there be no proper text
+    " object.
+    call search('.', 'W')
+
     return s:Jump(a:count, function('s:SearchLastOfSynID'), 'b', g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
 endfunction
 function! SameSyntaxMotion#TextObjectEnd( count, isInner )
