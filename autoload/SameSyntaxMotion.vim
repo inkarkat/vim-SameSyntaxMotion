@@ -41,9 +41,6 @@ endfunction
 function! s:IsSynIDHere( line, col, synID )
     return (index(synstack(a:line, a:col), a:synID) != -1)
 endfunction
-function! s:IsHlgroupIdHere( line, col, hlgroupId )
-    return (s:GetHlgroupId(synID(a:line, a:col, 1)) == a:hlgroupId)
-endfunction
 function! s:IsWithoutHighlighting( synID )
     return empty(
     \   filter(
@@ -52,19 +49,18 @@ function! s:IsWithoutHighlighting( synID )
     \   )
     \)
 endfunction
-function! s:IsUnhighlightedWhitespaceHere( line, col )
+function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
     if search('\%#\s', 'cnW', a:line) == 0
 	" No whitespace under the cursor.
 	return 0
     endif
 
-    let l:synID = synID(a:line, a:col, 1)
-    if synIDtrans(l:synID) == 0
+    if synIDtrans(a:currentSyntaxId) == 0
 	" No effective syntax group here.
 	return 1
     endif
 
-    if s:IsWithoutHighlighting(l:synID)
+    if s:IsWithoutHighlighting(a:currentSyntaxId)
 	" The syntax group has no highlighting defined.
 	return 1
     endif
@@ -81,7 +77,10 @@ function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
 	    " We've arrived at the buffer's border.
 	    call setpos('.', [0] + l:originalPosition + [0])
 	    return l:matchPosition
-	elseif s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
+	endif
+
+	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+	if l:currentHlgroupId == a:hlgroupId
 	    " We're still / again inside the same-colored syntax area.
 	    if l:hasLeft
 		" We've found a place in the next syntax area with the same
@@ -91,7 +90,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
 	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
 	    " We're still / again inside the syntax area.
 	    " Progress until we also find the desired color in this syntax area.
-	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:matchPosition[1])
+	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
 	    " whitespace.
@@ -111,14 +110,17 @@ function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    break
-	elseif s:IsHlgroupIdHere(l:matchPosition[0], l:matchPosition[1], a:hlgroupId)
+	endif
+
+	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+	if l:currentHlgroupId == a:hlgroupId
 	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
 	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
 	    " We're still inside the syntax area.
 	    " Tentatively progress; we may again find the desired color in this
 	    " syntax area.
-	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:matchPosition[1])
+	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
 	    " whitespace.
