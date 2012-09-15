@@ -1,6 +1,7 @@
 " SameSyntaxMotion.vim: Motions to the borders of the same syntax highlighting.
-"
+"TODO:
 " DEPENDENCIES:
+"   - CountJump.vim autoload script, version 1.80 or higher
 "
 " Copyright: (C) 2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -8,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	004	15-Sep-2012	Replace s:Jump() with generic implementation by
+"				CountJump, CountJump#CountJumpFunc().
 "	003	14-Sep-2012	Implement text object. Factor out s:Jump() to
 "				allow passing in the original syntaxId and
 "				hlgroupId; it may be different at the text
@@ -68,7 +71,7 @@ function! s:IsUnhighlightedWhitespaceHere( line, col )
 
     return 0
 endfunction
-function! s:SearchFirstOfSynID( synID, hlgroupId, flags )
+function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
     let l:originalPosition = getpos('.')[1:2]
     let l:hasLeft = 0
 
@@ -99,7 +102,7 @@ function! s:SearchFirstOfSynID( synID, hlgroupId, flags )
 	endif
     endwhile
 endfunction
-function! s:SearchLastOfSynID( synID, hlgroupId, flags )
+function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
     let l:originalPosition = getpos('.')[1:2]
     let l:goodPosition = [0, 0]
 
@@ -129,51 +132,22 @@ function! s:SearchLastOfSynID( synID, hlgroupId, flags )
     call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
     return l:goodPosition
 endfunction
-function! s:Jump( count, SearchFunction, flags, currentSyntaxId, currentHlgroupId )
-    let l:save_view = winsaveview()
-"****D echomsg '****' a:currentSyntaxId.':' string(synIDattr(a:currentSyntaxId, 'name')) 'colored in' synIDattr(a:currentHlgroupId, 'name')
-    for l:i in range(1, a:count)
-	let l:matchPosition = call(a:SearchFunction, [a:currentSyntaxId, a:currentHlgroupId, a:flags])
-	if l:matchPosition == [0, 0]
-	    if l:i > 1
-		" (Due to the count,) we've already moved to an intermediate
-		" match. Undo that to behave like the old vi-compatible
-		" motions. (Only the ]s motion has different semantics; it obeys
-		" the 'wrapscan' setting and stays at the last possible match if
-		" the setting is off.)
-		call winrestview(l:save_view)
-	    endif
-
-	    " Ring the bell to indicate that no further match exists.
-	    execute "normal! \<C-\>\<C-n>\<Esc>"
-
-	    return l:matchPosition
-	endif
-    endfor
-
-    " Open the fold at the final search result. This makes the search work like
-    " the built-in motions, and avoids that some visual selections get stuck at
-    " a match inside a closed fold.
-    normal! zv
-
-    return l:matchPosition
-endfunction
-function! SameSyntaxMotion#Jump( count, SearchFunction, flags )
+function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
     let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
-    return  s:Jump(a:count, a:SearchFunction, a:flags, l:currentSyntaxId, l:currentHlgroupId)
+    return  CountJump#CountJumpFunc(a:count, a:SearchFunction, (a:isBackward ? 'b' : ''), l:currentSyntaxId, l:currentHlgroupId)
 endfunction
 
 function! SameSyntaxMotion#BeginForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), '')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('SameSyntaxMotion#SearchFirstOfSynID'), 0)
 endfunction
 function! SameSyntaxMotion#BeginBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), 'b')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('SameSyntaxMotion#SearchLastOfSynID'), 1)
 endfunction
 function! SameSyntaxMotion#EndForward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchLastOfSynID'), '')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('SameSyntaxMotion#SearchLastOfSynID'), 0)
 endfunction
 function! SameSyntaxMotion#EndBackward( mode )
-    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('s:SearchFirstOfSynID'), 'b')
+    call CountJump#JumpFunc(a:mode, function('SameSyntaxMotion#Jump'), function('SameSyntaxMotion#SearchFirstOfSynID'), 1)
 endfunction
 
 function! SameSyntaxMotion#TextObjectBegin( count, isInner )
@@ -185,10 +159,10 @@ function! SameSyntaxMotion#TextObjectBegin( count, isInner )
     " object.
     call search('.', 'W')
 
-    return s:Jump(a:count, function('s:SearchLastOfSynID'), 'b', g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), 'b', g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
 endfunction
 function! SameSyntaxMotion#TextObjectEnd( count, isInner )
-    return s:Jump(a:count, function('s:SearchLastOfSynID'), '' , g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), '' , g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
 endfunction
 
 let &cpo = s:save_cpo
