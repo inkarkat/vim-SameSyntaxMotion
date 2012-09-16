@@ -11,6 +11,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	003	14-Sep-2012	Rename config variables.
+"				Implement text object.
 "	002	13-Sep-2012	Implement the full set of the four begin/end
 "				forward/backward mappings.
 "				Implement skipping over unhighlighted
@@ -28,22 +30,30 @@ set cpo&vim
 
 "- configuration ---------------------------------------------------------------
 
-if ! exists('g:SameSyntaxMotion_Mapping')
-    let g:SameSyntaxMotion_Mapping = 'y'
+if ! exists('g:SameSyntaxMotion_BeginMapping')
+    let g:SameSyntaxMotion_BeginMapping = 'y'
 endif
-if ! exists('g:SameSyntaxMotion_InverseMapping')
-    let g:SameSyntaxMotion_InverseMapping = 'Y'
+if ! exists('g:SameSyntaxMotion_EndMapping')
+    let g:SameSyntaxMotion_EndMapping = 'Y'
 endif
+if ! exists('g:SameSyntaxMotion_TextObjectMapping')
+    let g:SameSyntaxMotion_TextObjectMapping = 'y'
+endif
+
 
 
 "- mappings --------------------------------------------------------------------
 
-call CountJump#Motion#MakeBracketMotionWithJumpFunctions('', g:SameSyntaxMotion_Mapping, g:SameSyntaxMotion_InverseMapping,
+call CountJump#Motion#MakeBracketMotionWithJumpFunctions('', g:SameSyntaxMotion_BeginMapping, g:SameSyntaxMotion_EndMapping,
 \   function('SameSyntaxMotion#BeginForward'),
 \   function('SameSyntaxMotion#BeginBackward'),
 \   function('SameSyntaxMotion#EndForward'),
 \   function('SameSyntaxMotion#EndBackward'),
 \   1)
+call CountJump#TextObject#MakeWithJumpFunctions('', g:SameSyntaxMotion_TextObjectMapping, 'a', 'v',
+\   function('SameSyntaxMotion#TextObjectBegin'),
+\   function('SameSyntaxMotion#TextObjectEnd')
+\)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
