@@ -9,6 +9,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	006	17-Sep-2012	Implement inner jump that stays in the current
+"				line and does not cross unhighlighted
+"				whitespace, and use that to define an inner text
+"				object, too.
+"				Shuffle a:flags argument to the back for better
+"				grouping.
 "	005	16-Sep-2012	Optimization: Speed up iteration by performing
 "				the synID()-lookup only once on each position
 "				and by caching the result of the
@@ -78,13 +84,13 @@ function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
 
     return 0
 endfunction
-function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
+function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner )
     let l:originalPosition = getpos('.')[1:2]
     let l:hasLeft = 0
     let l:synstackCache = {}
 
     while 1
-	let l:matchPosition = searchpos('.', a:flags.'W')
+	let l:matchPosition = searchpos('.', a:flags.'W', (a:isInner ? line('.') : 0))
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    call setpos('.', [0] + l:originalPosition + [0])
@@ -102,7 +108,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
 	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still / again inside the syntax area.
 	    " Progress until we also find the desired color in this syntax area.
-	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+	elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
 	    " whitespace.
@@ -113,13 +119,13 @@ function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
 	endif
     endwhile
 endfunction
-function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
+function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
     let l:originalPosition = getpos('.')[1:2]
     let l:goodPosition = [0, 0]
     let l:synstackCache = {}
 
     while 1
-	let l:matchPosition = searchpos('.', a:flags.'W')
+	let l:matchPosition = searchpos('.', a:flags.'W', (a:isInner ? line('.') : 0))
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    break
@@ -133,7 +139,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
 	    " We're still inside the syntax area.
 	    " Tentatively progress; we may again find the desired color in this
 	    " syntax area.
-	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+	elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
 	    " Tentatively progress; the same syntax area may continue after the
 	    " plain whitespace. But if it doesn't, we do not include the
 	    " whitespace.
@@ -149,7 +155,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
 endfunction
 function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
     let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
-    return  CountJump#CountJumpFunc(a:count, a:SearchFunction, (a:isBackward ? 'b' : ''), l:currentSyntaxId, l:currentHlgroupId)
+    return  CountJump#CountJumpFunc(a:count, a:SearchFunction, l:currentSyntaxId, l:currentHlgroupId, (a:isBackward ? 'b' : ''), 0)
 endfunction
 
 function! SameSyntaxMotion#BeginForward( mode )
@@ -174,10 +180,10 @@ function! SameSyntaxMotion#TextObjectBegin( count, isInner )
     " object.
     call search('.', 'W')
 
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), 'b', g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'b', a:isInner)
 endfunction
 function! SameSyntaxMotion#TextObjectEnd( count, isInner )
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), '' , g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, '' , a:isInner)
 endfunction
 
 let &cpo = s:save_cpo
