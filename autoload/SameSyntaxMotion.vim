@@ -1,5 +1,5 @@
 " SameSyntaxMotion.vim: Motions to the borders of the same syntax highlighting.
-"TODO:
+"
 " DEPENDENCIES:
 "   - CountJump.vim autoload script, version 1.80 or higher
 "
@@ -9,6 +9,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	005	16-Sep-2012	Optimization: Speed up iteration by performing
+"				the synID()-lookup only once on each position
+"				and by caching the result of the
+"				synstack()-search for each current synID. Even
+"				though this contributed only 40% to the runtime
+"				(the other 40% is for synID(), 10% for the
+"				searchpos()), it somehow also reduces the time
+"				for synID() lookups dramatically.
 "	004	15-Sep-2012	Replace s:Jump() with generic implementation by
 "				CountJump, CountJump#CountJumpFunc().
 "	003	14-Sep-2012	Implement text object. Factor out s:Jump() to
@@ -38,8 +46,11 @@ function! s:GetCurrentSyntaxAndHlgroupIds()
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     return [l:currentSyntaxId, s:GetHlgroupId(l:currentSyntaxId)]
 endfunction
-function! s:IsSynIDHere( line, col, synID )
-    return (index(synstack(a:line, a:col), a:synID) != -1)
+function! s:IsSynIDHere( line, col, synID, currentSyntaxId, synstackCache )
+    if ! has_key(a:synstackCache, a:currentSyntaxId)
+	let a:synstackCache[a:currentSyntaxId] = (index(synstack(a:line, a:col), a:synID) != -1)
+    endif
+    return a:synstackCache[a:currentSyntaxId]
 endfunction
 function! s:IsWithoutHighlighting( synID )
     return empty(
@@ -70,6 +81,7 @@ endfunction
 function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
     let l:originalPosition = getpos('.')[1:2]
     let l:hasLeft = 0
+    let l:synstackCache = {}
 
     while 1
 	let l:matchPosition = searchpos('.', a:flags.'W')
@@ -87,7 +99,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( flags, synID, hlgroupId )
 		" color.
 		return l:matchPosition
 	    endif
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
+	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still / again inside the syntax area.
 	    " Progress until we also find the desired color in this syntax area.
 	elseif s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
@@ -104,6 +116,7 @@ endfunction
 function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
     let l:originalPosition = getpos('.')[1:2]
     let l:goodPosition = [0, 0]
+    let l:synstackCache = {}
 
     while 1
 	let l:matchPosition = searchpos('.', a:flags.'W')
@@ -116,7 +129,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( flags, synID, hlgroupId )
 	if l:currentHlgroupId == a:hlgroupId
 	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID)
+	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still inside the syntax area.
 	    " Tentatively progress; we may again find the desired color in this
 	    " syntax area.
