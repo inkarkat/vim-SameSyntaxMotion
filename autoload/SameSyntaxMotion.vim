@@ -11,6 +11,12 @@
 " REVISION	DATE		REMARKS
 "	007	18-Sep-2012	Support wrapped search for motions through
 "				HlgroupMotion#JumpWithWrapMessage() overload.
+"				FIX: When checking whether the original synID is
+"				in the syntax stack, only elements on top of it
+"				are relevant. Need to compare the found indices
+"				instead of simply checking for containment.
+"				Rename s:IsSynIDHere() to
+"				s:IsSynIDContainedHere() to better reflect this.
 "	006	17-Sep-2012	Implement inner jump that stays in the current
 "				line, does not cross unhighlighted
 "				whitespace, and does not include whitespace
@@ -55,9 +61,16 @@ function! s:GetCurrentSyntaxAndHlgroupIds()
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
     return [l:currentSyntaxId, s:GetHlgroupId(l:currentSyntaxId)]
 endfunction
-function! s:IsSynIDHere( line, col, synID, currentSyntaxId, synstackCache )
+function! s:IsSynIDContainedHere( line, col, synID, currentSyntaxId, synstackCache )
     if ! has_key(a:synstackCache, a:currentSyntaxId)
-	let a:synstackCache[a:currentSyntaxId] = (index(synstack(a:line, a:col), a:synID) != -1)
+	let l:synstack = synstack(a:line, a:col)
+	let l:synIdIndex = index(l:synstack, a:synID)
+	" To be contained in the original syntax (represented by a:synID), that
+	" syntax must still be part of the syntax stack and the current syntax
+	" must be on top of it.
+	" Note: a:currentSyntaxId is guaranteed to be in the syntax stack, no
+	" need to check for containment.
+	let a:synstackCache[a:currentSyntaxId] = (l:synIdIndex != -1 && index(l:synstack, a:currentSyntaxId) >= l:synIdIndex)
     endif
     return a:synstackCache[a:currentSyntaxId]
 endfunction
@@ -111,7 +124,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
 		" color.
 		return l:matchPosition
 	    endif
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
+	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still / again inside the syntax area.
 	    " Progress until we also find the desired color in this syntax area.
 	elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
@@ -151,7 +164,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 
 	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
-	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
+	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still inside the syntax area.
 	    " Tentatively progress; we may again find the desired color in this
 	    " syntax area.
