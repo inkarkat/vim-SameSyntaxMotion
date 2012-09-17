@@ -66,9 +66,11 @@ function! s:IsWithoutHighlighting( synID )
     \   )
     \)
 endfunction
+function! s:IsWhitespaceHere( line )
+    return search('\%#\s', 'cnW', a:line) != 0
+endfunction
 function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
-    if search('\%#\s', 'cnW', a:line) == 0
-	" No whitespace under the cursor.
+    if ! s:IsWhitespaceHere(a:line)
 	return 0
     endif
 
@@ -133,6 +135,12 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 
 	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
 	if l:currentHlgroupId == a:hlgroupId
+	    if a:isInner && s:IsWhitespaceHere(l:matchPosition[0])
+		" We don't include whitespace around the syntax area in the
+		" inner jump.
+		continue
+	    endif
+
 	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
 	elseif s:IsSynIDHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
