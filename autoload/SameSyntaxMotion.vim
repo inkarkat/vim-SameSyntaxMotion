@@ -103,6 +103,7 @@ function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
     return 0
 endfunction
 function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner )
+    let l:isBackward = (a:flags =~# 'b')
     let l:originalPosition = getpos('.')[1:2]
     let l:matchPosition = []
     let l:hasLeft = 0
@@ -118,11 +119,25 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
 
 	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
 	if l:currentHlgroupId == a:hlgroupId
+	    if ! l:isBackward && l:matchPosition == [1, 1] && l:matchPosition != l:originalPosition
+		" This is no circular buffer; text at the buffer start is
+		" separate from the end. Break up the syntax area to correctly
+		" handle matches at both beginning and end of the buffer.
+		let l:hasLeft = 1
+	    endif
+
 	    " We're still / again inside the same-colored syntax area.
 	    if l:hasLeft
 		" We've found a place in the next syntax area with the same
 		" color.
 		return l:matchPosition
+	    endif
+
+	    if l:isBackward && l:matchPosition == [1, 1]
+		" This is no circular buffer; text at the buffer start is
+		" separate from the end. Break up the syntax area to correctly
+		" handle matches at both beginning and end of the buffer.
+		let l:hasLeft = 1
 	    endif
 	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still / again inside the syntax area.
