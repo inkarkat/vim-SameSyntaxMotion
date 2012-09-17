@@ -9,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	007	18-Sep-2012	Support wrapped search for motions through
+"				HlgroupMotion#JumpWithWrapMessage() overload.
 "	006	17-Sep-2012	Implement inner jump that stays in the current
 "				line, does not cross unhighlighted
 "				whitespace, and does not include whitespace
@@ -89,11 +91,12 @@ function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
 endfunction
 function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner )
     let l:originalPosition = getpos('.')[1:2]
+    let l:matchPosition = []
     let l:hasLeft = 0
     let l:synstackCache = {}
 
-    while 1
-	let l:matchPosition = searchpos('.', a:flags.'W', (a:isInner ? line('.') : 0))
+    while l:matchPosition != l:originalPosition
+	let l:matchPosition = searchpos('.', a:flags, (a:isInner ? line('.') : 0))
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    call setpos('.', [0] + l:originalPosition + [0])
@@ -121,14 +124,18 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
 	    " Keep on searching for the next syntax area.
 	endif
     endwhile
+
+    " We've wrapped around and arrived at the original position without a match.
+    return [0, 0]
 endfunction
 function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
     let l:originalPosition = getpos('.')[1:2]
     let l:goodPosition = [0, 0]
+    let l:matchPosition = []
     let l:synstackCache = {}
 
-    while 1
-	let l:matchPosition = searchpos('.', a:flags.'W', (a:isInner ? line('.') : 0))
+    while l:matchPosition != l:originalPosition
+	let l:matchPosition = searchpos('.', a:flags, (a:isInner ? line('.') : 0))
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    break
@@ -156,7 +163,8 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 	    " We've just left the syntax area.
 	    break
 	endif
-	" Keep on searching for the next syntax area.
+	" Keep on searching for the next syntax area, until we wrap around and
+	" arrive at the original position without a match.
     endwhile
 
     call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
@@ -164,7 +172,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 endfunction
 function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
     let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
-    return  CountJump#CountJumpFunc(a:count, a:SearchFunction, l:currentSyntaxId, l:currentHlgroupId, (a:isBackward ? 'b' : ''), 0)
+    return  CountJump#CountJumpFuncWithWrapMessage(a:count, 'same syntax search', a:isBackward, a:SearchFunction, l:currentSyntaxId, l:currentHlgroupId, (a:isBackward ? 'b' : ''), 0)
 endfunction
 
 function! SameSyntaxMotion#BeginForward( mode )
@@ -189,10 +197,10 @@ function! SameSyntaxMotion#TextObjectBegin( count, isInner )
     " object.
     call search('.', 'W')
 
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'b', a:isInner)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'bW', a:isInner)
 endfunction
 function! SameSyntaxMotion#TextObjectEnd( count, isInner )
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, '' , a:isInner)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'W' , a:isInner)
 endfunction
 
 let &cpo = s:save_cpo
