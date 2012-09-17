@@ -10,9 +10,10 @@
 "
 " REVISION	DATE		REMARKS
 "	006	17-Sep-2012	Implement inner jump that stays in the current
-"				line and does not cross unhighlighted
-"				whitespace, and use that to define an inner text
-"				object, too.
+"				line, does not cross unhighlighted
+"				whitespace, and does not include whitespace
+"				around the syntax area.
+"				Use that to define an inner text object, too.
 "				Shuffle a:flags argument to the back for better
 "				grouping.
 "	005	16-Sep-2012	Optimization: Speed up iteration by performing
