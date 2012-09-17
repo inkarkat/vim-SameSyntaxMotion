@@ -21,8 +21,9 @@ highlighting for movement.
 This plugin provides mappings to jump to the borders and next [count]
 occurrences of text highlighted in the same way as under the cursor. So when
 you're in a large block of comments, a quick |[y| will take you to the
-beginning of the comment. The |ay| text object will select the surrounding
-text that belongs to the same syntax group, or is highlighted the same way.
+beginning of the comment. The |ay| and |iy| text objects will select the
+surrounding text that belongs to the same syntax group, or is highlighted the
+same way.
 
 HOW IT WORKS								     *
 
@@ -42,7 +43,7 @@ RELATED WORKS								     *
 ==============================================================================
 USAGE						      *SameSyntaxMotion-usage*
 
-"Same syntax" in the context of the mappings and text object means:
+"Same syntax" in the context of the mappings and text objects means:
 1. The same highlight group is used to highlight the text. Transparent syntax
    groups are ignored, highlight links are followed. Depending on the
    colorscheme, this usually means if it has the same color and attributes,
@@ -69,7 +70,8 @@ USAGE						      *SameSyntaxMotion-usage*
 ay			"a syntax" text object, select [count] same syntax
 			areas.
 iy			"inner syntax" text object, select [count] same syntax
-			areas within the same line. Unhighlighted whitespace
+			areas within the same line. Whitespace around the
+			syntax area is not included. Unhighlighted whitespace
 			delimits same syntax items here, so this selects
 			individual keywords.
 
