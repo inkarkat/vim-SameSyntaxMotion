@@ -15,7 +15,14 @@ history				|SameSyntaxMotion-history|
 ==============================================================================
 DESCRIPTION					*SameSyntaxMotion-description*
 
-This plugin ...
+Vim offers many different powerful motions to position the cursor. But
+sometimes, it's easiest to use the highlighting of the built-in syntax
+highlighting for movement.
+This plugin provides mappings to jump to the borders and next [count]
+occurrences of text highlighted in the same way as under the cursor. So when
+you're in a large block of comments, a quick |[y| will take you to the
+beginning of the comment. The |ay| text object will select the surrounding
+text that belongs to the same syntax group, or is highlighted the same way.
 
 HOW IT WORKS								     *
 
@@ -26,19 +33,45 @@ SEE ALSO								     *
 (Plugins offering complementary functionality, or plugins using this library.)
 
 RELATED WORKS								     *
-(Alternatives from other authors, other approaches, references not used here.)
+
+- The SyntaxMotion plugin (vimscript #2965) by Dominique Pellé provides very
+  similar motions for normal and visual mode, but no operator-pending and text
+  objects. It does not skip over contained sub-syntax items and uses same
+  color as the distinguishing property.
 
 ==============================================================================
 USAGE						      *SameSyntaxMotion-usage*
+
+"Same syntax" in the context of the mappings and text object means:
+1. The same highlight group is used to highlight the text. Transparent syntax
+   groups are ignored, highlight links are followed. Depending on the
+   colorscheme, this usually means if it has the same color and attributes,
+   it's the same, though (especially in low-color terminals) multiple
+   highlight groups may have the same visual appearance, but are not
+   identical.
+2. The same syntax group as under the cursor. When this group contains other
+   syntax groups (possibly with different highlighting), these are included.
+   So when you have escape sequences in a string ("foo\<CR>bar"), quoted words
+   in a comment (# a "foo" piece), or keywords in a docstring (@author Ernie),
+   the entire text is treated as one syntax area, even though there are
+   differently-colored pieces inside.
+3. Unhighlighted whitespace between the same syntax items is skipped. So when
+   there are multiple keywords in a row (FOO BAR BAZ), they are treated as one
+   area, even though the whitespace between them is not covered by the syntax.
+
    *]y* *]Y* *[y* *[Y* *v_]y* *v_]Y* *v_[y* *v_[Y* *o_]y* *o_]Y* *o_[y* *o_[Y*
 ]y			Go to [count] next start of the same syntax.
 ]Y			Go to [count] next end of the same syntax.
 [y			Go to [count] previous start of the same syntax.
 [Y			Go to [count] previous end of the same syntax.
 
-								   *ay* *v_ay*
+						       *ay* *v_ay* *iy* *v_iy*
 ay			"a syntax" text object, select [count] same syntax
 			areas.
+iy			"inner syntax" text object, select [count] same syntax
+			areas within the same line. Unhighlighted whitespace
+			delimits same syntax items here, so this selects
+			individual keywords.
 
 ==============================================================================
 INSTALLATION				       *SameSyntaxMotion-installation*
@@ -54,7 +87,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				       *SameSyntaxMotion-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the CountJump plugin (vimscript #3130).
+- Requires the CountJump plugin (vimscript #3130), version 1.80 or higher.
 
 ==============================================================================
 CONFIGURATION				      *SameSyntaxMotion-configuration*
@@ -65,12 +98,12 @@ To change the default motion mappings, use: >
     let g:SameSyntaxMotion_BeginMapping = 'y'
     let g:SameSyntaxMotion_EndMapping = 'Y'
 To also change the [ / ] prefix to something else, follow the instructions for
-|CountJump-remap-motions|. (This requires CountJump 1.60.)
+|CountJump-remap-motions|.
 
 To change the default text object mappings, use: >
     let g:SameSyntaxMotion_TextObjectMapping = 'y'
 To also change the a prefix to something else, follow the instructions for
-|CountJump-remap-text-objects|. (This requires CountJump 1.60.)
+|CountJump-remap-text-objects|.
 
 ==============================================================================
 INTEGRATION					*SameSyntaxMotion-integration*
