@@ -65,6 +65,7 @@ USAGE						      *SameSyntaxMotion-usage*
 ]Y			Go to [count] next end of the same syntax.
 [y			Go to [count] previous start of the same syntax.
 [Y			Go to [count] previous end of the same syntax.
+			The 'wrapscan' setting applies.
 
 						       *ay* *v_ay* *iy* *v_iy*
 ay			"a syntax" text object, select [count] same syntax
