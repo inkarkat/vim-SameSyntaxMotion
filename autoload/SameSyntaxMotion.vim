@@ -9,6 +9,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	008	18-Sep-2012	Handle same syntax areas at the beginning and
+"				end of the buffer; in those cases, the
+"				wrap-around ends the syntax area, and we must
+"				only search for the last of the syntax area
+"				without wrapping.
 "	007	18-Sep-2012	Support wrapped search for motions through
 "				HlgroupMotion#JumpWithWrapMessage() overload.
 "				FIX: When checking whether the original synID is
@@ -157,13 +162,14 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
     return [0, 0]
 endfunction
 function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
+    let l:flags = a:flags
     let l:originalPosition = getpos('.')[1:2]
     let l:goodPosition = [0, 0]
     let l:matchPosition = []
     let l:synstackCache = {}
 
     while l:matchPosition != l:originalPosition
-	let l:matchPosition = searchpos('.', a:flags, (a:isInner ? line('.') : 0))
+	let l:matchPosition = searchpos('.', l:flags, (a:isInner ? line('.') : 0))
 	if l:matchPosition == [0, 0]
 	    " We've arrived at the buffer's border.
 	    break
@@ -179,6 +185,9 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 
 	    " We're still / again inside the same-colored syntax area.
 	    let l:goodPosition = l:matchPosition
+	    " Go on (without wrapping now!) until we've reached the start of the
+	    " syntax area.
+	    let l:flags = substitute(l:flags, '[wW]', '', 'g') . 'W'
 	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 	    " We're still inside the syntax area.
 	    " Tentatively progress; we may again find the desired color in this
