@@ -11,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	004	17-Sep-2012	Define an inner text object, too.
 "	003	14-Sep-2012	Rename config variables.
 "				Implement text object.
 "	002	13-Sep-2012	Implement the full set of the four begin/end
@@ -50,7 +51,7 @@ call CountJump#Motion#MakeBracketMotionWithJumpFunctions('', g:SameSyntaxMotion_
 \   function('SameSyntaxMotion#EndForward'),
 \   function('SameSyntaxMotion#EndBackward'),
 \   1)
-call CountJump#TextObject#MakeWithJumpFunctions('', g:SameSyntaxMotion_TextObjectMapping, 'a', 'v',
+call CountJump#TextObject#MakeWithJumpFunctions('', g:SameSyntaxMotion_TextObjectMapping, 'aI', 'v',
 \   function('SameSyntaxMotion#TextObjectBegin'),
 \   function('SameSyntaxMotion#TextObjectEnd')
 \)
