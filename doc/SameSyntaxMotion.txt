@@ -6,7 +6,6 @@ description			|SameSyntaxMotion-description|
 usage				|SameSyntaxMotion-usage|
 installation			|SameSyntaxMotion-installation|
 configuration			|SameSyntaxMotion-configuration|
-integration			|SameSyntaxMotion-integration|
 limitations			|SameSyntaxMotion-limitations|
 known problems			|SameSyntaxMotion-known-problems|
 todo				|SameSyntaxMotion-todo|
@@ -15,23 +14,15 @@ history				|SameSyntaxMotion-history|
 ==============================================================================
 DESCRIPTION					*SameSyntaxMotion-description*
 
-Vim offers many different powerful motions to position the cursor. But
-sometimes, it's easiest to use the highlighting of the built-in syntax
-highlighting for movement.
+Vim offers many different powerful motions to position the cursor, but none
+leverages the syntactic analysis of the built-in syntax highlighting.
+
 This plugin provides mappings to jump to the borders and next [count]
 occurrences of text highlighted in the same way as under the cursor. So when
 you're in a large block of comments, a quick |[y| will take you to the
 beginning of the comment. The |ay| and |iy| text objects will select the
 surrounding text that belongs to the same syntax group, or is highlighted the
 same way.
-
-HOW IT WORKS								     *
-
-SOURCE									     *
-(Original Vim tip, Stack Overflow answer, ...)
-
-SEE ALSO								     *
-(Plugins offering complementary functionality, or plugins using this library.)
 
 RELATED WORKS								     *
 
@@ -48,14 +39,14 @@ USAGE						      *SameSyntaxMotion-usage*
    groups are ignored, highlight links are followed. Depending on the
    colorscheme, this usually means if it has the same color and attributes,
    it's the same, though (especially in low-color terminals) multiple
-   highlight groups may have the same visual appearance, but are not
+   highlight groups may have the same visual appearance, but are _not_
    identical.
 2. The same syntax group as under the cursor. When this group contains other
    syntax groups (possibly with different highlighting), these are included.
    So when you have escape sequences in a string ("foo\<CR>bar"), quoted words
    in a comment (# a "foo" piece), or keywords in a docstring (@author Ernie),
    the entire text is treated as one syntax area, even though there are
-   differently-colored pieces inside.
+   different-colored pieces inside.
 3. Unhighlighted whitespace between the same syntax items is skipped. So when
    there are multiple keywords in a row (FOO BAR BAZ), they are treated as one
    area, even though the whitespace between them is not covered by the syntax.
@@ -109,10 +100,11 @@ To also change the a prefix to something else, follow the instructions for
 |CountJump-remap-text-objects|.
 
 ==============================================================================
-INTEGRATION					*SameSyntaxMotion-integration*
-
-==============================================================================
 LIMITATIONS					*SameSyntaxMotion-limitations*
+
+- Because the algorithm has to sequentially inspect every character's syntax
+  groups, movement (especially when there's no additional match and the search
+  continues to the buffer's border or wraps around) can be noticeably slow.
 
 KNOWN PROBLEMS				     *SameSyntaxMotion-known-problems*
 
@@ -123,7 +115,7 @@ IDEAS						      *SameSyntaxMotion-ideas*
 ==============================================================================
 HISTORY						    *SameSyntaxMotion-history*
 
-GOAL
+1.00	03-Dec-2012
 First published version.
 
 0.01	14-Sep-2012
