@@ -2,7 +2,7 @@
 "
 " DEPENDENCIES:
 "   - SameSyntaxMotion.vim autoload script
-"   - CountJump.vim, CountJump/Motion.vim autoload scripts, version 1.70 or
+"   - CountJump.vim, CountJump/Motion.vim autoload scripts, version 1.80 or
 "     higher
 "
 " Copyright: (C) 2012 Ingo Karkat
@@ -11,7 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"	004	17-Sep-2012	Define an inner text object, too.
+"   1.00.004	17-Sep-2012	Define an inner text object, too.
 "	003	14-Sep-2012	Rename config variables.
 "				Implement text object.
 "	002	13-Sep-2012	Implement the full set of the four begin/end
