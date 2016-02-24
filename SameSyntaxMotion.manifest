@@ -1,0 +1,3 @@
+autoload/SameSyntaxMotion.vim
+plugin/SameSyntaxMotion.vim
+doc/SameSyntaxMotion.txt
