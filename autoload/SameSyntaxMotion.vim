@@ -9,7 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"	008	18-Sep-2012	Handle same syntax areas at the beginning and
+"   1.00.008	18-Sep-2012	Handle same syntax areas at the beginning and
 "				end of the buffer; in those cases, the
 "				wrap-around ends the syntax area, and we must
 "				only search for the last of the syntax area
