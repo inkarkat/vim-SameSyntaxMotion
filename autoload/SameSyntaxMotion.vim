@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - CountJump.vim autoload script, version 1.80 or higher
 "
-" Copyright: (C) 2012 Ingo Karkat
+" Copyright: (C) 2012-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.01.009	22-Jul-2017	CountJump 1.9 renames g:CountJump_Context to
+"				g:CountJump_TextObjectContext.
 "   1.00.008	18-Sep-2012	Handle same syntax areas at the beginning and
 "				end of the buffer; in those cases, the
 "				wrap-around ends the syntax area, and we must
@@ -226,7 +228,7 @@ function! SameSyntaxMotion#EndBackward( mode )
 endfunction
 
 function! SameSyntaxMotion#TextObjectBegin( count, isInner )
-    let [g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+    let [g:CountJump_TextObjectContext.syntaxId, g:CountJump_TextObjectContext.hlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
 
     " Move one character to the right, so that we do not jump to the previous
     " syntax area when we're at the start of a syntax area. CountJump will
@@ -234,10 +236,10 @@ function! SameSyntaxMotion#TextObjectBegin( count, isInner )
     " object.
     call search('.', 'W')
 
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'bW', a:isInner)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_TextObjectContext.syntaxId, g:CountJump_TextObjectContext.hlgroupId, 'bW', a:isInner)
 endfunction
 function! SameSyntaxMotion#TextObjectEnd( count, isInner )
-    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_Context.syntaxId, g:CountJump_Context.hlgroupId, 'W' , a:isInner)
+    return CountJump#CountJumpFunc(a:count, function('SameSyntaxMotion#SearchLastOfSynID'), g:CountJump_TextObjectContext.syntaxId, g:CountJump_TextObjectContext.hlgroupId, 'W' , a:isInner)
 endfunction
 
 let &cpo = s:save_cpo
