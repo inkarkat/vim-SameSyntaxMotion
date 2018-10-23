@@ -3,12 +3,15 @@
 " DEPENDENCIES:
 "   - CountJump.vim autoload script, version 1.80 or higher
 "
-" Copyright: (C) 2012-2017 Ingo Karkat
+" Copyright: (C) 2012-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.01.010	24-Oct-2018	Refactoring: Inline s:GetHlgroupId(), expose
+"                               s:GetCurrentSyntaxAndHlgroupIds(); it may be
+"                               useful for other clients, too.
 "   1.01.009	22-Jul-2017	CountJump 1.9 renames g:CountJump_Context to
 "				g:CountJump_TextObjectContext.
 "   1.00.008	18-Sep-2012	Handle same syntax areas at the beginning and
@@ -61,12 +64,9 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! s:GetHlgroupId( synID )
-    return synIDtrans(a:synID)
-endfunction
-function! s:GetCurrentSyntaxAndHlgroupIds()
+function! SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
     let l:currentSyntaxId = synID(line('.'), col('.'), 1)
-    return [l:currentSyntaxId, s:GetHlgroupId(l:currentSyntaxId)]
+    return [l:currentSyntaxId, synIDtrans(l:currentSyntaxId)]
 endfunction
 function! s:IsSynIDContainedHere( line, col, synID, currentSyntaxId, synstackCache )
     if ! has_key(a:synstackCache, a:currentSyntaxId)
@@ -124,7 +124,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
 	    return l:matchPosition
 	endif
 
-	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+	let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
 	if l:currentHlgroupId == a:hlgroupId
 	    if ! l:isBackward && l:matchPosition == [1, 1] && l:matchPosition != l:originalPosition
 		" This is no circular buffer; text at the buffer start is
@@ -177,7 +177,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 	    break
 	endif
 
-	let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+	let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
 	if l:currentHlgroupId == a:hlgroupId
 	    if a:isInner && s:IsWhitespaceHere(l:matchPosition[0])
 		" We don't include whitespace around the syntax area in the
@@ -210,7 +210,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
     return l:goodPosition
 endfunction
 function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
-    let [l:currentSyntaxId, l:currentHlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+    let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
     return  CountJump#CountJumpFuncWithWrapMessage(a:count, 'same syntax search', a:isBackward, a:SearchFunction, l:currentSyntaxId, l:currentHlgroupId, (a:isBackward ? 'b' : ''), 0)
 endfunction
 
@@ -228,7 +228,7 @@ function! SameSyntaxMotion#EndBackward( mode )
 endfunction
 
 function! SameSyntaxMotion#TextObjectBegin( count, isInner )
-    let [g:CountJump_TextObjectContext.syntaxId, g:CountJump_TextObjectContext.hlgroupId] = s:GetCurrentSyntaxAndHlgroupIds()
+    let [g:CountJump_TextObjectContext.syntaxId, g:CountJump_TextObjectContext.hlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
 
     " Move one character to the right, so that we do not jump to the previous
     " syntax area when we're at the start of a syntax area. CountJump will
