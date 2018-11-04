@@ -7,60 +7,6 @@
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.01.010	24-Oct-2018	Refactoring: Inline s:GetHlgroupId(), expose
-"                               s:GetCurrentSyntaxAndHlgroupIds(); it may be
-"                               useful for other clients, too.
-"   1.01.009	22-Jul-2017	CountJump 1.9 renames g:CountJump_Context to
-"				g:CountJump_TextObjectContext.
-"   1.00.008	18-Sep-2012	Handle same syntax areas at the beginning and
-"				end of the buffer; in those cases, the
-"				wrap-around ends the syntax area, and we must
-"				only search for the last of the syntax area
-"				without wrapping.
-"	007	18-Sep-2012	Support wrapped search for motions through
-"				HlgroupMotion#JumpWithWrapMessage() overload.
-"				FIX: When checking whether the original synID is
-"				in the syntax stack, only elements on top of it
-"				are relevant. Need to compare the found indices
-"				instead of simply checking for containment.
-"				Rename s:IsSynIDHere() to
-"				s:IsSynIDContainedHere() to better reflect this.
-"	006	17-Sep-2012	Implement inner jump that stays in the current
-"				line, does not cross unhighlighted
-"				whitespace, and does not include whitespace
-"				around the syntax area.
-"				Use that to define an inner text object, too.
-"				Shuffle a:flags argument to the back for better
-"				grouping.
-"	005	16-Sep-2012	Optimization: Speed up iteration by performing
-"				the synID()-lookup only once on each position
-"				and by caching the result of the
-"				synstack()-search for each current synID. Even
-"				though this contributed only 40% to the runtime
-"				(the other 40% is for synID(), 10% for the
-"				searchpos()), it somehow also reduces the time
-"				for synID() lookups dramatically.
-"	004	15-Sep-2012	Replace s:Jump() with generic implementation by
-"				CountJump, CountJump#CountJumpFunc().
-"	003	14-Sep-2012	Implement text object. Factor out s:Jump() to
-"				allow passing in the original syntaxId and
-"				hlgroupId; it may be different at the text
-"				object begin and therefore may adulterate the
-"				end match.
-"	002	13-Sep-2012	Implement the full set of the four begin/end
-"				forward/backward mappings.
-"				Implement skipping over unhighlighted
-"				whitespace when its surrounded by the same
-"				syntax area on both sides.
-"				Handle situations where due to :syntax hs=s+1 or
-"				contained groups (like vimCommentTitle contained
-"				in vimLineComment) the same highlighting may
-"				start only later in the syntax area, while still
-"				skipping over contained "subsyntaxes" (like that
-"				quote here) inside the syntax area.
-"	001	12-Sep-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
 

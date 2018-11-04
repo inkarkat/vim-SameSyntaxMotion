@@ -72,10 +72,16 @@ iy			"inner syntax" text object, select [count] same syntax
 ==============================================================================
 INSTALLATION				       *SameSyntaxMotion-installation*
 
-This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
-the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the |:UseVimball| command. >
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-SameSyntaxMotion
+You can use your favorite plugin manager, or "git clone" into a directory used
+for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+development snapshot on "master".
+
+This script is also packaged as a |vimball|. If you have the "gunzip"
+decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the |:UseVimball| command. >
     vim SameSyntaxMotion*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
@@ -114,10 +120,16 @@ TODO						       *SameSyntaxMotion-todo*
 
 IDEAS						      *SameSyntaxMotion-ideas*
 
+CONTRIBUTING					 *SameSyntaxMotion-contribute*
+
+Report any bugs, send patches, or suggest features via the issue tracker at
+https://github.com/inkarkat/vim-SameSyntaxMotion/issues or email (address
+below).
+
 ==============================================================================
 HISTORY						    *SameSyntaxMotion-history*
 
-1.01	RELEASEME
+1.01	04-Nov-2018
 - CountJump 1.9 renames g:CountJump_Context to g:CountJump_TextObjectContext.
   *** You need to update to CountJump.vim (vimscript #3130) version 1.90! ***
 
@@ -128,7 +140,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2017 Ingo Karkat
+Copyright: (C) 2012-2018 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

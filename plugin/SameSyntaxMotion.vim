@@ -5,21 +5,10 @@
 "   - CountJump.vim, CountJump/Motion.vim autoload scripts, version 1.80 or
 "     higher
 "
-" Copyright: (C) 2012 Ingo Karkat
+" Copyright: (C) 2012-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.00.004	17-Sep-2012	Define an inner text object, too.
-"	003	14-Sep-2012	Rename config variables.
-"				Implement text object.
-"	002	13-Sep-2012	Implement the full set of the four begin/end
-"				forward/backward mappings.
-"				Implement skipping over unhighlighted
-"				whitespace when its surrounded by the same
-"				syntax area on both sides.
-"	001	12-Sep-2012	file creation
 
 " Avoid installing twice or when in unsupported Vim version.
 if exists('g:loaded_SameSyntaxMotion') || (v:version < 702) || ! exists('*synstack')
