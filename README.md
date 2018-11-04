@@ -118,7 +118,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.01    RELEASEME
+##### 1.01    04-Nov-2018
 - CountJump 1.9 renames g:CountJump\_Context to g:CountJump\_TextObjectContext.
   __You need to update to CountJump.vim ([vimscript #3130](http://www.vim.org/scripts/script.php?script_id=3130)) version 1.90!__
 
