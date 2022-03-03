@@ -28,7 +28,7 @@ function! s:IsSynIDContainedHere( line, col, synID, currentSyntaxId, synstackCac
     endif
     return a:synstackCache[a:currentSyntaxId]
 endfunction
-function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
+function! s:IsUnhighlightedWhitespaceHere( currentSyntaxId )
     if ! ingo#cursor#IsOnWhitespace()
 	return 0
     endif
@@ -86,7 +86,7 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
 	    elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
 		" We're still / again inside the syntax area.
 		" Progress until we also find the desired color in this syntax area.
-	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:currentSyntaxId)
 		" Tentatively progress; the same syntax area may continue after the
 		" plain whitespace. But if it doesn't, we do not include the
 		" whitespace.
@@ -136,7 +136,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 		" We're still inside the syntax area.
 		" Tentatively progress; we may again find the desired color in this
 		" syntax area.
-	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:currentSyntaxId)
 		" Tentatively progress; the same syntax area may continue after the
 		" plain whitespace. But if it doesn't, we do not include the
 		" whitespace.
