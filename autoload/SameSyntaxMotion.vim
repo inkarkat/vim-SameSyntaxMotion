@@ -1,7 +1,8 @@
 " SameSyntaxMotion.vim: Motions to the borders of the same syntax highlighting.
 "
 " DEPENDENCIES:
-"   - CountJump.vim autoload script, version 1.80 or higher
+"   - CountJump.vim plugin
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2012-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -27,19 +28,8 @@ function! s:IsSynIDContainedHere( line, col, synID, currentSyntaxId, synstackCac
     endif
     return a:synstackCache[a:currentSyntaxId]
 endfunction
-function! s:IsWithoutHighlighting( synID )
-    return empty(
-    \   filter(
-    \       map(['fg', 'bg', 'sp'], 'synIDattr(a:synID, "v:val")'),
-    \       '! empty(v:val)'
-    \   )
-    \)
-endfunction
-function! s:IsWhitespaceHere( line )
-    return search('\%#\s', 'cnW', a:line) != 0
-endfunction
 function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
-    if ! s:IsWhitespaceHere(a:line)
+    if ! ingo#cursor#IsOnWhitespace()
 	return 0
     endif
 
@@ -48,7 +38,7 @@ function! s:IsUnhighlightedWhitespaceHere( line, currentSyntaxId )
 	return 1
     endif
 
-    if s:IsWithoutHighlighting(a:currentSyntaxId)
+    if ! ingo#syntaxitem#HasHighlighting(a:currentSyntaxId)
 	" The syntax group has no highlighting defined.
 	return 1
     endif
@@ -131,7 +121,7 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
 
 	    let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
 	    if l:currentHlgroupId == a:hlgroupId
-		if a:isInner && s:IsWhitespaceHere(l:matchPosition[0])
+		if a:isInner && ingo#cursor#IsOnWhitespace()
 		    " We don't include whitespace around the syntax area in the
 		    " inner jump.
 		    continue

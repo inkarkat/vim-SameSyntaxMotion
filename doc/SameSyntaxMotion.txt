@@ -89,6 +89,8 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				       *SameSyntaxMotion-dependencies*
 
 - Requires Vim 7.0 or higher.
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.044 or
+  higher.
 - Requires the CountJump plugin (vimscript #3130), version 1.90 or higher.
 
 ==============================================================================
@@ -129,6 +131,8 @@ below).
 ==============================================================================
 HISTORY						    *SameSyntaxMotion-history*
 
+1.02	RELEASEME
+
 1.01	04-Nov-2018
 - CountJump 1.9 renames g:CountJump_Context to g:CountJump_TextObjectContext.
   *** You need to update to CountJump.vim (vimscript #3130) version 1.90! ***
@@ -140,7 +144,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2018 Ingo Karkat
+Copyright: (C) 2012-2022 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

@@ -1,4 +1,4 @@
-SAME SYNTAX MOTION   
+SAME SYNTAX MOTION
 ===============================================================================
 _by Ingo Karkat_
 
@@ -80,6 +80,8 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.044 or
+  higher.
 - Requires the CountJump plugin ([vimscript #3130](http://www.vim.org/scripts/script.php?script_id=3130)), version 1.90 or higher.
 
 CONFIGURATION
@@ -118,9 +120,12 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 1.02    RELEASEME
+
 ##### 1.01    04-Nov-2018
 - CountJump 1.9 renames g:CountJump\_Context to g:CountJump\_TextObjectContext.
-  __You need to update to CountJump.vim ([vimscript #3130](http://www.vim.org/scripts/script.php?script_id=3130)) version 1.90!__
+
+__You need to update to CountJump.vim ([vimscript #3130](http://www.vim.org/scripts/script.php?script_id=3130)) version 1.90!__
 
 ##### 1.00    03-Dec-2012
 - First published version.
@@ -129,7 +134,7 @@ HISTORY
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2018 Ingo Karkat -
+Copyright: (C) 2012-2022 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
