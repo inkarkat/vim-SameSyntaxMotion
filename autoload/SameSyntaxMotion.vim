@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - CountJump.vim autoload script, version 1.80 or higher
 "
-" Copyright: (C) 2012-2018 Ingo Karkat
+" Copyright: (C) 2012-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -62,52 +62,57 @@ function! SameSyntaxMotion#SearchFirstOfSynID( synID, hlgroupId, flags, isInner 
     let l:hasLeft = 0
     let l:synstackCache = {}
 
-    while l:matchPosition != l:originalPosition
-	let l:matchPosition = searchpos('.', a:flags, (a:isInner ? line('.') : 0))
-	if l:matchPosition == [0, 0]
-	    " We've arrived at the buffer's border.
-	    call setpos('.', [0] + l:originalPosition + [0])
-	    return l:matchPosition
-	endif
-
-	let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
-	if l:currentHlgroupId == a:hlgroupId
-	    if ! l:isBackward && l:matchPosition == [1, 1] && l:matchPosition != l:originalPosition
-		" This is no circular buffer; text at the buffer start is
-		" separate from the end. Break up the syntax area to correctly
-		" handle matches at both beginning and end of the buffer.
-		let l:hasLeft = 1
-	    endif
-
-	    " We're still / again inside the same-colored syntax area.
-	    if l:hasLeft
-		" We've found a place in the next syntax area with the same
-		" color.
+    try
+	while l:matchPosition != l:originalPosition
+	    let l:matchPosition = searchpos('.', a:flags, (a:isInner ? line('.') : 0))
+	    if l:matchPosition == [0, 0]
+		" We've arrived at the buffer's border.
+		call setpos('.', [0] + l:originalPosition + [0])
 		return l:matchPosition
 	    endif
 
-	    if l:isBackward && l:matchPosition == [1, 1]
-		" This is no circular buffer; text at the buffer start is
-		" separate from the end. Break up the syntax area to correctly
-		" handle matches at both beginning and end of the buffer.
-		let l:hasLeft = 1
-	    endif
-	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
-	    " We're still / again inside the syntax area.
-	    " Progress until we also find the desired color in this syntax area.
-	elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
-	    " Tentatively progress; the same syntax area may continue after the
-	    " plain whitespace. But if it doesn't, we do not include the
-	    " whitespace.
-	else
-	    " We've just left the syntax area.
-	    let l:hasLeft = 1
-	    " Keep on searching for the next syntax area.
-	endif
-    endwhile
+	    let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
+	    if l:currentHlgroupId == a:hlgroupId
+		if ! l:isBackward && l:matchPosition == [1, 1] && l:matchPosition != l:originalPosition
+		    " This is no circular buffer; text at the buffer start is
+		    " separate from the end. Break up the syntax area to correctly
+		    " handle matches at both beginning and end of the buffer.
+		    let l:hasLeft = 1
+		endif
 
-    " We've wrapped around and arrived at the original position without a match.
-    return [0, 0]
+		" We're still / again inside the same-colored syntax area.
+		if l:hasLeft
+		    " We've found a place in the next syntax area with the same
+		    " color.
+		    return l:matchPosition
+		endif
+
+		if l:isBackward && l:matchPosition == [1, 1]
+		    " This is no circular buffer; text at the buffer start is
+		    " separate from the end. Break up the syntax area to correctly
+		    " handle matches at both beginning and end of the buffer.
+		    let l:hasLeft = 1
+		endif
+	    elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
+		" We're still / again inside the syntax area.
+		" Progress until we also find the desired color in this syntax area.
+	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+		" Tentatively progress; the same syntax area may continue after the
+		" plain whitespace. But if it doesn't, we do not include the
+		" whitespace.
+	    else
+		" We've just left the syntax area.
+		let l:hasLeft = 1
+		" Keep on searching for the next syntax area.
+	    endif
+	endwhile
+
+	" We've wrapped around and arrived at the original position without a match.
+	return [0, 0]
+    catch /^Vim\%((\a\+)\)\=:/
+	call setpos('.', [0] + l:originalPosition + [0])
+	throw ingo#msg#MsgFromVimException()   " Avoid E608: Cannot :throw exceptions with 'Vim' prefix.
+    endtry
 endfunction
 function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
     let l:flags = a:flags
@@ -116,44 +121,49 @@ function! SameSyntaxMotion#SearchLastOfSynID( synID, hlgroupId, flags, isInner )
     let l:matchPosition = []
     let l:synstackCache = {}
 
-    while l:matchPosition != l:originalPosition
-	let l:matchPosition = searchpos('.', l:flags, (a:isInner ? line('.') : 0))
-	if l:matchPosition == [0, 0]
-	    " We've arrived at the buffer's border.
-	    break
-	endif
-
-	let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
-	if l:currentHlgroupId == a:hlgroupId
-	    if a:isInner && s:IsWhitespaceHere(l:matchPosition[0])
-		" We don't include whitespace around the syntax area in the
-		" inner jump.
-		continue
+    try
+	while l:matchPosition != l:originalPosition
+	    let l:matchPosition = searchpos('.', l:flags, (a:isInner ? line('.') : 0))
+	    if l:matchPosition == [0, 0]
+		" We've arrived at the buffer's border.
+		break
 	    endif
 
-	    " We're still / again inside the same-colored syntax area.
-	    let l:goodPosition = l:matchPosition
-	    " Go on (without wrapping now!) until we've reached the start of the
-	    " syntax area.
-	    let l:flags = substitute(l:flags, '[wW]', '', 'g') . 'W'
-	elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
-	    " We're still inside the syntax area.
-	    " Tentatively progress; we may again find the desired color in this
-	    " syntax area.
-	elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
-	    " Tentatively progress; the same syntax area may continue after the
-	    " plain whitespace. But if it doesn't, we do not include the
-	    " whitespace.
-	elseif l:goodPosition != [0, 0]
-	    " We've just left the syntax area.
-	    break
-	endif
-	" Keep on searching for the next syntax area, until we wrap around and
-	" arrive at the original position without a match.
-    endwhile
+	    let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
+	    if l:currentHlgroupId == a:hlgroupId
+		if a:isInner && s:IsWhitespaceHere(l:matchPosition[0])
+		    " We don't include whitespace around the syntax area in the
+		    " inner jump.
+		    continue
+		endif
 
-    call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
-    return l:goodPosition
+		" We're still / again inside the same-colored syntax area.
+		let l:goodPosition = l:matchPosition
+		" Go on (without wrapping now!) until we've reached the start of the
+		" syntax area.
+		let l:flags = substitute(l:flags, '[wW]', '', 'g') . 'W'
+	    elseif s:IsSynIDContainedHere(l:matchPosition[0], l:matchPosition[1], a:synID, l:currentSyntaxId, l:synstackCache)
+		" We're still inside the syntax area.
+		" Tentatively progress; we may again find the desired color in this
+		" syntax area.
+	    elseif ! a:isInner && s:IsUnhighlightedWhitespaceHere(l:matchPosition[0], l:currentSyntaxId)
+		" Tentatively progress; the same syntax area may continue after the
+		" plain whitespace. But if it doesn't, we do not include the
+		" whitespace.
+	    elseif l:goodPosition != [0, 0]
+		" We've just left the syntax area.
+		break
+	    endif
+	    " Keep on searching for the next syntax area, until we wrap around and
+	    " arrive at the original position without a match.
+	endwhile
+
+	call setpos('.', [0] + (l:goodPosition == [0, 0] ? l:originalPosition : l:goodPosition) + [0])
+	return l:goodPosition
+    catch /^Vim\%((\a\+)\)\=:/
+	call setpos('.', [0] + l:originalPosition + [0])
+	throw ingo#msg#MsgFromVimException()   " Avoid E608: Cannot :throw exceptions with 'Vim' prefix.
+    endtry
 endfunction
 function! SameSyntaxMotion#Jump( count, SearchFunction, isBackward )
     let [l:currentSyntaxId, l:currentHlgroupId] = SameSyntaxMotion#GetCurrentSyntaxAndHlgroupIds()
