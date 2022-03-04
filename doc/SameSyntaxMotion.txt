@@ -36,7 +36,8 @@ RELATED WORKS								     *
 ==============================================================================
 USAGE						      *SameSyntaxMotion-usage*
 
-"Same syntax" in the context of the mappings and text objects means:
+"Same syntax" in the context of the mappings and text objects means all of the
+following:
 1. The same highlight group is used to highlight the text. Transparent syntax
    groups are ignored, highlight links are followed. Depending on the
    colorscheme, this usually means if it has the same color and attributes,
