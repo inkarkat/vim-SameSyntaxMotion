@@ -9,11 +9,12 @@ Vim offers many different powerful motions to position the cursor, but none
 leverages the syntactic analysis of the built-in syntax highlighting.
 
 This plugin provides mappings to jump to the borders and next [count]
-occurrences of text highlighted in the same way as under the cursor. So when
+occurrences of text parsed as the same syntax as under the cursor. So when
 you're in a large block of comments, a quick [y will take you to the
 beginning of the comment. The ay and iy text objects will select the
-surrounding text that belongs to the same syntax group, or is highlighted the
-same way.
+surrounding text that belongs to the same syntax.
+
+### SEE ALSO
 
 ### RELATED WORKS
 
@@ -29,18 +30,14 @@ USAGE
 
     "Same syntax" in the context of the mappings and text objects means all of the
     following:
-    1. The same highlight group is used to highlight the text. Transparent syntax
-       groups are ignored, highlight links are followed. Depending on the
-       colorscheme, this usually means if it has the same color and attributes,
-       it's the same, though (especially in low-color terminals) multiple
-       highlight groups may have the same visual appearance, but are _not_
-       identical.
-    2. The same syntax group as under the cursor. When this group contains other
-       syntax groups (possibly with different highlighting), these are included.
-       So when you have escape sequences in a string ("foo\<CR>bar"), quoted words
-       in a comment (# a "foo" piece), or keywords in a docstring (@author Ernie),
-       the entire text is treated as one syntax area, even though there are
-       different-colored pieces inside.
+    1. The same syntax ID is used to highlight the text. Transparent syntax groups
+       are ignored.
+    2. The stack of syntax items includes the one found under the cursor. When a
+       syntax contains other syntaxes (possibly with different highlighting),
+       these are included. So when you have escape sequences in a string
+       ("foo\<CR>bar"), quoted words in a comment (# a "foo" piece), or keywords
+       in a docstring (@author Ernie), the entire text is treated as one syntax
+       area, even though there are different-colored pieces inside.
     3. Unhighlighted whitespace between the same syntax items is skipped. So when
        there are multiple keywords in a row (FOO BAR BAZ), they are treated as one
        area, even though the whitespace between them is not covered by the syntax.
@@ -121,7 +118,12 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.02    RELEASEME
+##### 1.10    RELEASEME
+- CHG: Highlight group / same color is not considered any longer; only the
+  syntax ID itself counts. There's now the SameHighlightMotion.vim plugin for
+  moving along pure highlighting, so let's sharpen the focus of this one. In
+  practice, this change likely makes no difference in most cases, as syntax
+  definitions and colors usually are defined in parallel.
 
 ##### 1.01    04-Nov-2018
 - CountJump 1.9 renames g:CountJump\_Context to g:CountJump\_TextObjectContext.
