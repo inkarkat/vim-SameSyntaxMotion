@@ -118,7 +118,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.10    RELEASEME
+##### 1.10    12-Nov-2024
 - CHG: Highlight group / same color is not considered any longer; only the
   syntax ID itself counts. There's now the SameHighlightMotion.vim plugin for
   moving along pure highlighting, so let's sharpen the focus of this one. In
@@ -137,7 +137,7 @@ __You need to update to CountJump.vim ([vimscript #3130](http://www.vim.org/scri
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2022 Ingo Karkat -
+Copyright: (C) 2012-2024 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
